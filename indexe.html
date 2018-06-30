@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge"> 
+<meta name="viewport" content="width=device-width, initial-scale=1"> 
+<title> Nebulas transfer system</title>
+<link rel="stylesheet" type="text/css" href="css/normalize.css" />
+<link rel="stylesheet" type="text/css" href="css/demo.css" />
+<!--必要样式-->
+<link rel="stylesheet" type="text/css" href="css/component.css" />
+<script type="text/javascript" src="./dist/nebulas.js"></script>
+<script src="js/spop.min.js"></script>
+<link href="css/spop.min.css" rel="stylesheet"/>
+<script type="text/javascript" src="./dist/nebPay.js"></script>
+<script type="text/javascript" src="./jquery-3.3.1.min.js"></script>
+<script  src="js/alert.js"></script>
+<!--[if IE]>
+<script src="js/html5.js"></script>
+<![endif]-->
+<script>
+
+    function get(){
+    
+        
+         spop('Transfer money on the nebulas. If the wallet address is wrong, it will not be recovered. You cannot contact the other party.!!');
+         spop('So you can set a field on your site that is associated with your wallet address (such as your name, password) and store it with the nebulas.');
+         spop("When you need to transfer your address and this field to the other party, the other side confirms that the person's address is yours through the query on this site, to avoid the occurrence of errors");
+    }
+    window.onload=get;
+    
+    </script>
+</head>
+<body>
+		<div class="container demo-1">
+			<div class="content">
+				<div id="large-header" class="large-header">
+					<canvas id="demo-canvas"></canvas>
+					<div class="logo_box">
+						<h3>welcome<span style="float: right; font-size: 50%"><a href="index.html" style="color: rgb(255, 255, 255);">中文</a></span></h3>
+						<form action="#" name="f" method="post">
+							<div class="input_outer">
+								<span class="u_user"></span>
+								<input name="logname" class="text" style="color: #FFFFFF !important" type="text" placeholder="enter the wallet address" id=search_addr>
+							</div>
+							<div class="input_outer">
+								<span class="us_uer"></span>
+								<input name="logpass" class="text" style="color: #FFFFFF !important; position:absolute; z-index:100;"value=""  type="text" placeholder="Associated fields" id=content>
+							</div>
+                            <div class="mb2"><a class="act-but submit" href="javascript:;" style="color: #FFFFFF" id=post>Save(address and associated fields)</a><a class="act-but submit" href="javascript:;" style="color: #FFFFFF" id=search>Read (input address)</a><br><a class="act-but submit" href="paye.html" style="color: #FFFFFF" >enter the transfer page</a></div>
+                            
+						</form>
+					</div>
+				</div>
+			</div>
+		</div><!-- /container -->
+		
+		<script src="js/TweenLite.min.js"></script>
+		<script src="js/EasePack.min.js"></script>
+		<script src="js/rAF.js"></script>
+		<script src="js/demo-1.js"></script>
+		
+		<div style="text-align:center;">
+
+</div>
+	</body>
+	<script>
+	var dappContactAddress = "n1fPqFmhQW2sWUWLciKY329cGJuoqCJbHwV";
+    var nebulas = require("nebulas"), Account = Account, neb = new nebulas.Neb();
+    neb.setRequest(new nebulas.HttpRequest("https://mainnet.nebulas.io"));
+
+
+    var NebPay = require("nebpay");     //https://github.com/nebulasio/nebPay
+    var nebPay = new NebPay();
+    var serialNumber
+
+	 $("#search").click(function () {
+        if (!$("#search_addr").val()) {
+            alert("Wallet address cannot be empty");
+            return;
+        }
+
+        $('#content').text("");
+        var from = dappContactAddress
+        var value = "0";
+        var nonce = "0"
+        var gas_price = "1000000"
+        var gas_limit = "2000000"
+        var callFunction = "get";
+        var callArgs = "[\"" + $("#search_addr").val() + "\"]";
+        console.log(callArgs);
+        var contract = {
+            "function": callFunction,
+            "args": callArgs
+        }
+        showLoading({
+            title:"Reading data",
+            mask:true,
+            success:function (res) {
+                console.warn(JSON.stringify(res))
+            }
+        });
+        setTimeout(function(){
+            hideLoading()
+        },3000);
+
+        neb.api.call(from, dappContactAddress, value, nonce, gas_price, gas_limit, contract).then(function (resp) {
+            var result = resp.result;
+            showLoading({
+            title:"Reading data",
+            mask:true,
+            success:function (res) {
+                console.warn(JSON.stringify(res))
+            }
+        });
+        setTimeout(function(){
+            hideLoading()
+        },2000);
+            if (result === 'null') {
+                $('#content').val("no result！or try again");//val 和text
+               
+                return;
+            }
+            console.log(result);
+            result = JSON.parse(result);
+            
+            $('#content').val(result.field);
+            
+
+        }).catch(function (err) {
+            console.log("error :" + err.message);
+
+        })
+
+	})
+	
+	$('#post').click(function () {
+        if (!$("#content").val() || !$("#search_addr").val()) {
+            alert('Wallet address and associated fields cannot be empty');
+            return;
+        }
+        var to = dappContactAddress;
+        var value = "0";
+        var callFunction = "save";
+        var callArgs = "[\"" + $("#search_addr").val() + "\",\"" + $("#content").val() + "\"]";
+        console.log(callArgs);
+
+        serialNumber = nebPay.call(to, value, callFunction, callArgs, {    //使用nebpay的call接口去调用合约,
+            listener: function (resp) {
+                console.log("thecallback is " + resp)
+            }
+        });
+
+    })
+	
+	
+	
+	
+	
+	
+	
+	</script>
+</html>
